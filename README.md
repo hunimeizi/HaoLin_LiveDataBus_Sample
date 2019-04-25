@@ -1,6 +1,6 @@
 # HaoLin_LiveDataBus_Sample -- 组件之间的通讯LiveDataBus
 
- ## 关于LiveDataBus
+### 关于LiveDataBus
 - 从LiveData谈起
 
 ```xml
@@ -15,7 +15,7 @@
 
 ```
 
-- LiveData的优点
+### LiveData的优点
 
 ```xml
 
@@ -35,7 +35,7 @@
 
   ⑥ 解决Configuration Change问题，在屏幕发生旋转或者被回收再次启动，立刻就能收到最新的数据。
 ```
-- LiveDataBus的组成
+### LiveDataBus的组成
 
 ```xml
   ① 消息
