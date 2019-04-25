@@ -63,7 +63,7 @@
   ④ 订阅 Observer
      订阅者通过getChannel获取消息通道，然后调用observe订阅这个通道的消息。
 
-  ⑤ 发布 post postValue
+  ⑤ 发布 setValue postValue
      发布者通过getChannel获取消息通道，然后调用setValue或者postValue发布消息。
 ```
 ### LiveDataBus的组成
