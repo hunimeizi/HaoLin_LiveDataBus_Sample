@@ -1,7 +1,6 @@
 # HaoLin_LiveDataBus_Sample -- 组件之间的通讯LiveDataBus
 
 ### 关于LiveDataBus
-- 从LiveData谈起
 
 ```xml
 
