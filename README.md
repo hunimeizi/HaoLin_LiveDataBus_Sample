@@ -87,5 +87,5 @@
 ```
 
 
-### 直接看效果图
+### LiveDataBus原理图
 <img width="531" height = "281"  src="https://github.com/hunimeizi/HaoLin_LiveDataBus_Sample/blob/master/app/livedatabus.png"/>
