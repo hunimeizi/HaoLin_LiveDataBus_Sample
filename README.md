@@ -89,3 +89,109 @@
 
 ### LiveDataBus原理图
 <img width="531" height = "281"  src="https://github.com/hunimeizi/HaoLin_LiveDataBus_Sample/blob/master/app/livedatabus.png"/>
+
+### LiveDataBus 问题出现
+-
+    对于LiveDataBus的第一版实现，我们发现，在使用这个LiveDataBus的过程中，订阅者会收到订阅之前发布的消息。对于一个
+    消息总线来说，这是不可接受的。无论EventBus或者RxBus，订阅方都不会收到订阅之前发出的消息。对于一个消息总线，
+    LiveDataBus必须要解决这个问题。
+
+
+### LiveDataBus 问题原因总结
+-
+    对于这个问题，总结一下发生的核心原因。对于LiveData，其初始的version是-1，当我们调用了其setValue或者postValue，
+    其vesion会+1；对于每一个观察者的封装ObserverWrapper，其初始version也为-1，也就是说，每一个新注册的观察者，其
+    version为-1；当LiveData设置这个ObserverWrapper的时候，如果LiveData的version大于ObserverWrapper的version，
+    LiveData就会强制把当前value推送给Observer
+
+### LiveDataBus 最终实现
+- LiveDataBus 实现
+
+```xml
+
+        public final class LiveDataBus {
+        
+            private final Map<String, MutableLiveData<Object>> bus;
+        
+            private LiveDataBus() {
+                bus = new HashMap<>();
+            }
+        
+            private static class SingletonHolder {
+                private static final LiveDataBus LIVE_DATA_BUS = new LiveDataBus();
+            }
+        
+            public static LiveDataBus get() {
+                return SingletonHolder.LIVE_DATA_BUS;
+            }
+            public synchronized <T> MutableLiveData<T> with(String key,Class<T> type){
+                if (!bus.containsKey(key)){
+                    bus.put(key,new BusMutableLiveData<>());
+                }
+                return (MutableLiveData<T>) bus.get(key);
+            }
+        }
+
+```
+- LiveDataBus 反射 使observer.mLastVersion = mVersion
+
+```xml
+        public class BusMutableLiveData<T> extends MutableLiveData<T> {
+            @Override
+            public void observe(@NonNull LifecycleOwner owner, @NonNull Observer<T> observer) {
+                super.observe(owner, observer);
+                try {
+                    hook(observer);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        
+            /**
+             * 反射技术  使observer.mLastVersion = mVersion
+             *
+             * @param observer ob
+             */
+            private void hook(Observer<T> observer) throws Exception {
+                //根据源码 如果使observer.mLastVersion = mVersion; 就不会走 回调OnChange方法了，所以就算注册
+                //也不会收到消息
+                //首先获取liveData的class
+                Class<LiveData> classLiveData = LiveData.class;
+                //通过反射获取该类里mObserver属性对象
+                Field fieldObservers = classLiveData.getDeclaredField("mObservers");
+                //设置属性可以被访问
+                fieldObservers.setAccessible(true);
+                //获取的对象是this里这个对象值，他的值是一个map集合
+                Object objectObservers = fieldObservers.get(this);
+                //获取map对象的类型
+                Class<?> classObservers = objectObservers.getClass();
+                //获取map对象中所有的get方法
+                Method methodGet = classObservers.getDeclaredMethod("get", Object.class);
+                //设置get方法可以被访问
+                methodGet.setAccessible(true);
+                //执行该get方法，传入objectObservers对象，然后传入observer作为key的值
+                Object objectWrapperEntry = methodGet.invoke(objectObservers, observer);
+                //定义一个空的object对象
+                Object objectWrapper = null;
+                //判断objectWrapperEntry是否为Map.Entry类型
+                if (objectWrapperEntry instanceof Map.Entry) {
+                    objectWrapper = ((Map.Entry) objectWrapperEntry).getValue();
+                }
+                if (objectWrapper == null) {
+                    throw new NullPointerException("Wrapper can not be null!");
+                }
+        
+                //如果不是空 就得到该object的父类
+                Class<?> classObserverWrapper = objectWrapper.getClass().getSuperclass();
+                //通过他的父类的class对象，获取mLastVersion字段
+                Field fieldLastVersion = classObserverWrapper.getDeclaredField("mLastVersion");
+                fieldLastVersion.setAccessible(true);
+                Field fieldVersion = classLiveData.getDeclaredField("mVersion");
+                fieldVersion.setAccessible(true);
+                Object objectVersion = fieldVersion.get(this);
+                //把mVersion 字段的属性值设置给mLastVersion
+                fieldLastVersion.set(objectWrapper, objectVersion);
+            }
+        }
+        
+```
