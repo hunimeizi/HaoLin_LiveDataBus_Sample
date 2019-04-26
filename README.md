@@ -66,7 +66,7 @@
   ⑤ 发布 setValue postValue
      发布者通过getChannel获取消息通道，然后调用setValue或者postValue发布消息。
 ```
-### LiveDataBus的组成
+
 - 订阅注册
 ```xml
     LiveDataBus.get().with("MainActivity", HuaWei.class).observe(this, new Observer<HuaWei>() {
@@ -78,7 +78,6 @@
           });
 ```
 
-### LiveDataBus的组成
 - 发送消息
 
 ```xml
