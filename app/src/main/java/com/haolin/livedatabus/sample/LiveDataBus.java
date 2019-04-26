@@ -27,7 +27,7 @@ public final class LiveDataBus {
     }
     public synchronized <T> MutableLiveData<T> with(String key,Class<T> type){
         if (!bus.containsKey(key)){
-            bus.put(key,new MutableLiveData<>());
+            bus.put(key,new BusMutableLiveData<>());
         }
         return (MutableLiveData<T>) bus.get(key);
     }

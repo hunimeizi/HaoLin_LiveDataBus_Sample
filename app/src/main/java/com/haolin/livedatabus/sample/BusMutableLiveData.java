@@ -37,11 +37,11 @@ public class BusMutableLiveData<T> extends MutableLiveData<T> {
         //首先获取liveData的class
         Class<LiveData> classLiveData = LiveData.class;
         //通过反射获取该类里mObserver属性对象
-        Field fileObservers = classLiveData.getDeclaredField("mObservers");
+        Field fieldObservers = classLiveData.getDeclaredField("mObservers");
         //设置属性可以被访问
-        fileObservers.setAccessible(true);
+        fieldObservers.setAccessible(true);
         //获取的对象是this里这个对象值，他的值是一个map集合
-        Object objectObservers = fileObservers.get(this);
+        Object objectObservers = fieldObservers.get(this);
         //获取map对象的类型
         Class<?> classObservers = objectObservers.getClass();
         //获取map对象中所有的get方法
@@ -54,22 +54,21 @@ public class BusMutableLiveData<T> extends MutableLiveData<T> {
         Object objectWrapper = null;
         //判断objectWrapperEntry是否为Map.Entry类型
         if (objectWrapperEntry instanceof Map.Entry) {
-            objectWrapper = ((Map.Entry) objectObservers).getValue();
+            objectWrapper = ((Map.Entry) objectWrapperEntry).getValue();
         }
-
         if (objectWrapper == null) {
-            throw new NullPointerException("objectWrapper can not be null");
+            throw new NullPointerException("Wrapper can not be null!");
         }
 
         //如果不是空 就得到该object的父类
         Class<?> classObserverWrapper = objectWrapper.getClass().getSuperclass();
         //通过他的父类的class对象，获取mLastVersion字段
-        Field filedLastVersion = classObserverWrapper.getDeclaredField("mLastVersion");
-        filedLastVersion.setAccessible(true);
+        Field fieldLastVersion = classObserverWrapper.getDeclaredField("mLastVersion");
+        fieldLastVersion.setAccessible(true);
         Field fieldVersion = classLiveData.getDeclaredField("mVersion");
         fieldVersion.setAccessible(true);
-        Object objectVersion = fieldVersion.get("this");
+        Object objectVersion = fieldVersion.get(this);
         //把mVersion 字段的属性值设置给mLastVersion
-        filedLastVersion.set(objectWrapper, objectVersion);
+        fieldLastVersion.set(objectWrapper, objectVersion);
     }
 }
